@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="style/prism.css" rel="stylesheet" />
+    <title>Samsara Developer Example</title>
+  </head>
+  <body>
+    <main role="main" class="container">
+      <div style="padding: 3rem 1.5rem;">
+        <h1>Samsara Location API Sample Application</h1>
+        <p class="lead">This example walks through how to use the Samsara Location API to query the location of vehicles in your fleet.</p>
+
+        <h2>Introduction</h2>
+        <p>We'll be writing a <a href="https://www.python.org/">Python</a> script that will query Samsara for a vehicle's location information and then save that information to a database.</p>
+        <p>Here's what's covered in this example:</p>
+        <ul>
+          <li><a href="#setup">Setup</a> will explain the technologies we'll be using.</li>
+          <li><a href="#overview">Overview</a> will explain the different location APIs that Samsara has to offer.</li>
+          <li><a href="#save-data">Saving the data</a> will show you how to query the APIs and save the data to a database.</li>
+        </ul>
+        <p>The end result of this example can be found on <a href="stub">GitHub</a>. Feel free to reference it at any point if you get stuck along the way!</p>
+
+        <h3>Prerequisites</h3>
+        <p>We'll assume that you have some familiarity with Python, but you should be able to follow along even if you're coming from a different programming language. We'll also be using REST APIs to query Samsara. We'll explain the basics of REST APIs below, and feel free to skip that section if you're already familiar.</p>
+        <p>If you need a quick review of Python, take a look <a href="https://wiki.python.org/moin/BeginnersGuide/Programmers">here</a>. We'll be using the <a href="https://2.python-requests.org/en/master/">requests</a> library to make the REST API calls.</p>
+
+        <h2 id="setup">Setup</h2>
+        <p>Before you start, it will be good to familiarize yourself with the different technologies we'll be using to build the sample app. Feel free to skip any sections if they bore you ;)</p>
+
+        <h3>Command line</h3>
+        <p>The command line or command prompt is where you enter commands to control your computer. It's also called a terminal. You can find more information about the command line <a href="http://www.macworld.co.uk/feature/mac-software/how-use-terminal-on-mac-3608274/">for Mac</a>, <a href="https://www.quora.com/How-do-I-open-terminal-in-windows">for Windows</a>, or <a href="https://www.howtogeek.com/140679/beginner-geek-how-to-start-using-the-linux-terminal/">for Linux</a>.</p>
+
+        <h3>Python</h3>
+        <p>We'll be using Python 3, which may not be the default version of Python you have on your system. Check to see if you are running Python 3 by running <kbd>python --version</kbd>. You should see "Python" and a version number. If not, you can go <a href="https://www.python.org/downloads/release/python-373/">here</a> to install. After you've installed, re-run <kbd>python --version</kbd> to make sure you're running Python 3.</p>
+
+        <h3>Code editor</h3>
+        <p>We'll be writing Python files for this application. A code editor will be handy. I use <a href="https://code.visualstudio.com/">VS Code</a>, but feel free to use any code editor of your choice.</p>
+
+        <h3 id="database">Database</h3>
+        <p>We'll store the location data we query from Samsara in a database. We'll use <a href="https://www.sqlite.org/index.html">SQLite</a> as the database and <a href="https://www.sqlalchemy.org/">SQLAlchemy</a> as the Python API to the database. SQLite is an open source, light-weight database that is perfect for a sample app like this. SQLAlchemy is a Python SQL toolkit that allows you to connect to many different types of databases (SQLite among them), so you could potentially use SQLAlchemy to connect to a different type of database that your team uses.</p>
+
+        <p>You can find the installation package for SQLite <a href="https://www.sqlite.org/download.html">on this page</a>, and you can install SQLAlchemy by running <kbd>pip install SQLAlchemy</kbd> from the command line.</p>
+
+        <h2 id="overview">Overview</h2>
+        <p>Now you're ready to get started learning about Samsara's Location APIs!</p>
+
+        <h3>Samsara APIs</h3>
+        <p>You can access the Samsara Cloud to through REST APIs to build custom applications with your fleet management data. Samsara has a <a href="https://www.samsara.com/api">developer webpage</a> that gives an introduction to REST APIs in general and detailed documentation on the Samsara APIs if you'd like to read more. Simply put, REST APIs are ways of accessing and manipulating data on an external service through the internet. You use URLs you point to which data you'd like to interact with and provide parameters for querying or manipulating that data. The data is returned to you in <a href="http://www.json.org/">JSON</a> format (basically a combination of key-value pairs).</p>
+
+        <h3>Accessing the Samsara API</h3>
+        <p>Samsara APIs can be accessed through URLs that look like this:</p>
+        <pre><code>https://api.samsara.com/&lt;version&gt;/&lt;endpoint&gt;</code></pre>
+        <p>To access the APIs, you need an access token is then provided as a query string parameter as part of the URL. <a href="https://www.samsara.com/api#section/Authentication">Obtaining API keys</a> is available to all Samsara administrators. For this sample app, an API key was provided in the email you received to get to this page.</p>
+
+        <h3>Location APIs</h3>
+        <p>We're now ready to submit our first Samsara API!</p>
+        <p>Using your code editor, open a new file called <kbd>overview.py</kbd>, and type in the following code:</p>
+        <pre><code class="lang-py">import requests
+url = "https://api.samsara.com/v1/fleet/locations"
+querystring = {"access_token": YOUR_ACCESS_TOKEN}
+response = requests.request("GET", url, headers={}, params=querystring)
+print(response.text)</code></pre>
+        <p>You can run this file by running <kbd>python overview.py</kbd> from the command line.</p>
+        <p>The response will look something like this:</p>
+        <p><samp>{"vehicles":[{"id":212014918388867,"name":"GXA9-2UC-T7H","time":1560540016668,"latitude":37.77327209,"longitude":-122.391486367,"heading":0,"speed":13.148805973116996,"location":"4th Street, San Francisco, CA","onTrip":true,"vin":"","odometerMeters":0}]}</samp></p>
+        <p>What happened here?</p>
+        <ol>
+          <li>We imported the Python <code>requests</code> module to call REST APIs</li>
+          <li>We constructed the URL of our very first REST API call to Samsara: <code>https://api.samsara.com/v1/fleet/locations</code>.</li>
+          <li>We formed the <code>querystring</code> or parameters for our REST API call. Samsara REST API calls will always require at least the <code>access_token</code> as a parameter. We'll see examples of adding more later on.</li>
+          <li>We submitted at "GET" REST API call to the URL with our parameters using the Python <code>requests</code> module. "GET" REST API calls mean querying data from the server. There are other verbs like "POST" and "DELETE" that will manipulate data on the server, but we won't be using them in this sample app.</li>
+          <li>We received a response.</li>
+        </ol>
+        <p>The API we just called (and all Samsara APIs) are documented on the <a href="https://www.samsara.com/api">developer website</a>, but we'll go over the APIs here.</p> 
+        <p>Let's inspect the response a bit further. The response is JSON, so we can use the <code>json</code> Python module to print it out a little prettier. Add the following line to the top of the file: <pre><code class="lang-py">import json</code></pre> and change the last line of the file to <pre><code class="lang-py">print(json.dumps(response.json(), indent=2))</code></pre></p>
+        <p>Rerun the program from the command line: <kbd>python overview.py</kbd> The response should now look something like:</p>
+        <pre><code>{
+  "vehicles": [
+    {
+      "id": 212014918388867,
+      "name": "GXA9-2UC-T7H",
+      "time": 1560541230450,
+      "latitude": 37.770485824,
+      "longitude": -122.39122901,
+      "heading": 0,
+      "speed": 23.275665115724166,
+      "location": "4th Street, San Francisco, CA",
+      "onTrip": true,
+      "vin": "",
+      "odometerMeters": 0
+    }
+  ]
+}</code></pre>
+        <p>We can now see that a list (<code>[]</code>) of length 1 of <code>"vehicles"</code> was returned. The one vehicle in this list contains a bunch of key-value pairs of location data. We can now use this data to build a custom application, such as plotting the vehicle on a map using the <code>"latitude"</code> and <code>"longitute"</code> fields.</p>
+        <p>There's only one vehicle in this list, but there could have been multipe - each with their own set of location information. One piece of information that gets returned about these vehicles is their ID. An ID like this can be used in other APIs to get information specific to a vehicle. For example, let's change our code to get the locations of a specific vehicle between a given start and end time.</p>
+        <p>First, let's save the vehicle ID to a variable. Add the following lines to the end of your <kbd>overview.py</kbd> file to parse the JSON response and save the ID of the first vehicle in the list to the <code>vehicle_id</code> variable.</p>
+        <pre><code class="lang-py">response_json = response.json()
+list_of_vehicles = response_json["vehicles"]
+first_vehicle = list_of_vehicles[0]
+vehicle_id = first_vehicle["id"]</code></pre>
+        <p>Then, we can use this <code>vehicle_id</code> variable to submit another REST API query specific to that vehicle: Add <pre><code class="lang-py">import time</code></pre> to the top of the file, and add the following the bottom:</p>
+        <pre><code class="lang-py">now = int(time.time() * 1000)
+then = now - 15000
+
+url = f"https://api.samsara.com/v1/fleet/vehicles/{vehicle_id}/locations"
+querystring = {"access_token": YOUR_ACCESS_TOKEN, "startMs": str(then), "endMs": str(now)}
+response = requests.request("GET", url, params=querystring)
+print(json.dumps(response.json(), indent=2))</code></pre>
+        <p>Rerun the program by running <kbd>python overview.py</kbd> from the command line. The response will look something like this:</p>
+        <pre><code>[
+  {
+    "latitude": 37.773936252,
+    "location": "4th Street, San Francisco, CA",
+    "longitude": -122.391450442,
+    "speedMilesPerHour": 9.618214626580768,
+    "timeMs": 1560543257780
+  },
+  {
+    "latitude": 37.773670955,
+    "location": "4th Street, San Francisco, CA",
+    "longitude": -122.391535277,
+    "speedMilesPerHour": 13.148805973116996,
+    "timeMs": 1560543264785
+  },
+  {
+    "latitude": 37.773355198,
+    "location": "Long Bridge Street, San Francisco, CA",
+    "longitude": -122.391496558,
+    "speedMilesPerHour": 13.148805973116996,
+    "timeMs": 1560543270787
+  }
+]</code></pre>
+      <p>Let's talk about what happened here. First, let's take a look at the new URL for the new REST API we called. You'll notice we have the <code>vehicle_id</code> variable squashed in there. We used <a href="https://docs.python.org/3.6/reference/lexical_analysis.html#f-strings">Python string formatting</a> to squash the <code>vehicle_id</code> variable in the URL for the REST API call.</p>
+      <p>Let's also take a look at the <code>querystring</code>. You'll notice we have two more parameters this time: <code>startMs</code> and <code>endMs</code>. This is because this REST API queries for all locations of a particular vehicle between a start and an end time (<code>startMs</code> and <code>endMs</code>). The parameters are passed in as Unix millisecond timestamps, which is why we have the bit of code to calculate <code>now</code> and <code>then</code> (<code>now</code> is 15 seconds after <code>then</code>). These were calculated as integer values, but only strings can be passed into the <code>querystring</code> using the <code>requests</code> module, so we cast the integers to strings using <code>str()</code>.</p>
+      <p>Finally, the response we receive back is another JSON list of location data. This time, however, each item in the list is concerning the vehicle whose ID we passed into the REST API URL. Each item is location data for the vehicle every 5 seconds.</p>
+      <p>All of this is documented in the <a href="https://www.samsara.com/api">developer website</a>, such as what parameters this API is expecting and the data it returns.</p>
+
+      <h2 id="save-data">Saving the data</h2>
+      <p>When saving the location data to a database, let's use a different Samsara API to actually save the location data of all our vehicles between a certain start and end time.</p>
+      <p>Open a new file called <kbd>save_locations.py</kbd> and type in the following code:</p>
+      <pre><code class="lang-py">import requests
+import json
+import time
+
+url = "https://api.samsara.com/v1/fleet/vehicles/locations"
+
+now = int(time.time() * 1000)
+then = now - 15000
+
+querystring = {"access_token": YOUR_ACCESS_TOKEN, "startMs": str(then), "endMs": str(now)}
+response = requests.request("GET", url, params=querystring)
+print(json.dumps(response.json(), indent=2))
+</code></pre>
+        <p>Run the program with <kbd>python save_locations.py</kbd>. The response will look familiar:</p>
+        <pre><code>[
+  {
+    "id": 212014918388867,
+    "locations": [
+      {
+        "latitude": 37.772165081,
+        "location": "4th Street, San Francisco, CA",
+        "longitude": -122.391370425,
+        "speedMilesPerHour": 19.869357949574482,
+        "timeMs": 1560545598645
+      },
+      {
+        "latitude": 37.7725639,
+        "location": "4th Street, San Francisco, CA",
+        "longitude": -122.391402451,
+        "speedMilesPerHour": 19.869357949574482,
+        "timeMs": 1560545603649
+      },
+      {
+        "latitude": 37.772850553,
+        "location": "4th Street, San Francisco, CA",
+        "longitude": -122.391434677,
+        "speedMilesPerHour": 13.148805973116996,
+        "timeMs": 1560545608654
+      },
+      {
+        "latitude": 37.773166311,
+        "location": "4th Street, San Francisco, CA",
+        "longitude": -122.391473396,
+        "speedMilesPerHour": 13.148805973116996,
+        "timeMs": 1560545614655
+      }
+    ],
+    "name": "GXA9-2UC-T7H"
+  }
+]</code></pre>
+        <p>If we inspect the API we called this time, it is very similar to the <code>/fleet/vehicles/{vehicle_id}/locations</code> API we submitted in our other file, but it lacks the <code>vehicle_id</code> variable. This is because this API still queries for location data between a start and end time, but for all vehicles in the fleet. The structure of the JSON response is as follows:</p>
+        <pre><code>[
+  {
+    "id": 0,
+    "locations": [...list of location datapoints ...],
+    "name": "vehicle-0"
+  },
+  {
+    "id": 1,
+    "locations": [...list of location datapoints ...],
+    "name": "vehicle-1"
+  }
+]</code></pre>
+      <p>In this case, we only have one vehicle in our fleet, but this API allows us to get the location data of all our vehicles between a certain start and end time. Hm, maybe we want to save this data? How can we do this?</p>
+
+      <h3>Incorporating the database</h3>
+      <p>Now, it has finally come time for us to add the database code to our program. Let's first import SQLAlchemy at the top of our program to be able to talk to the <a href="#databse">SQLite database we installed</a>:</p>
+      <pre><code class="lang-py">from sqlalchemy import create_engine
+from sqlalchemy import Table, Column, Integer, Numeric, String, MetaData</code></pre>
+      <p>Then, after we've retrieved the response from the REST API request, add the following code:</p>
+      <pre><code class="lang-py">response = response.json()
+### Write to database
+engine = create_engine('sqlite:///locations.db')
+metadata = MetaData()
+locations = Table('locations', metadata,
+  Column('vehicle_id', Integer, primary_key=True),
+  Column('latitude', Numeric),
+  Column('location', String),
+  Column('longitude', Numeric),
+  Column('speedMilesPerHour', Numeric),
+  Column('timeMs', Integer, primary_key=True),
+  Column('name', String)
+)
+metadata.create_all(engine)
+
+con = engine.connect()
+for vehicle in response:
+  vehicle_id = vehicle['id']
+  vehicle_name = vehicle['name']
+  vehicle_locations = vehicle['locations']
+  for location in vehicle_locations:
+      con.execute(locations.insert(),
+          vehicle_id = vehicle_id,
+          latitude = location['latitude'],
+          location = location['location'],
+          longitude = location['longitude'],
+          speedMilesPerHour = location['speedMilesPerHour'],
+          timeMs = location['timeMs'],
+          name = vehicle_name
+      )</code></pre>
+
+        <p>As always, you can run the program with <kbd>python save_locations.py</kbd>. The first time you run the program, it will create a file called <kbd>locations.db</kbd> in the same directory you ran the program from. This is the SQLite database that gets created through our program. Upon subsequent runs of the program, SQLAlchemy will see that the database and locations table already exists and just add to it. (Simple right!?) We can verify that we've written our location data to the database by using the SQLite command-line tool. Run <kbd>sqlite3</kbd> from the command line in the folder your <kbd>locations.db</kbd> file is. Then run the following SQL commands to view the table we've created:</p>
+        <pre><code>.open locations.db
+select * from locations;</code></pre>
+        <p>You'll see rows of the table for all the location datapoints of all the vehicles that were returned by the REST API.</p>
+        <p>The <code>for</code> loops in the program are what iterate through the JSON response from the REST API to write the values to the database.</p>
+
+      </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="script/prism.js"></script>
+  </body>
+</html>
